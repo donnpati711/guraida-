@@ -1,0 +1,417 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap");
+
+:root {
+  color-scheme: light;
+  font-family: "DM Sans", "Noto Sans JP", sans-serif;
+  color: #173441;
+  background: #f3f6f3;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --ink: #173441;
+  --muted: #6d8589;
+  --mono: "DM Mono", monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  padding: 24px clamp(16px, 5vw, 72px);
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 12% 85%, rgba(198, 220, 202, 0.35), transparent 34%),
+    #f3f6f3;
+}
+
+button,
+a {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.game-shell {
+  width: min(1120px, 100%);
+}
+
+.topbar,
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar {
+  height: 54px;
+  margin-bottom: 14px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-decoration: none;
+}
+
+.brand-mark {
+  display: grid;
+  width: 27px;
+  height: 27px;
+  place-items: center;
+  border: 1px solid rgba(23, 52, 65, 0.2);
+  border-radius: 50%;
+  color: #dd885f;
+  font-size: 14px;
+}
+
+.topbar-note,
+.footer,
+.scene-caption,
+.eyebrow,
+.hud-label,
+.flight-status {
+  font-family: var(--mono);
+}
+
+.topbar-note {
+  color: #8a9b98;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+}
+
+.game-frame {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-height: 380px;
+  overflow: hidden;
+  border: 1px solid rgba(29, 68, 78, 0.12);
+  border-radius: 9px;
+  background: #b8e3ee;
+  box-shadow: 0 20px 60px rgba(37, 73, 72, 0.12), 0 2px 6px rgba(37, 73, 72, 0.06);
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.hud {
+  position: absolute;
+  z-index: 1;
+  top: 24px;
+  left: 26px;
+  display: flex;
+  align-items: flex-start;
+  gap: clamp(18px, 4vw, 48px);
+  pointer-events: none;
+}
+
+.hud-stat {
+  display: grid;
+  gap: 5px;
+  min-width: 68px;
+  text-shadow: 0 1px 12px rgba(255, 255, 255, 0.55);
+}
+
+.hud-label {
+  color: rgba(25, 62, 70, 0.66);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.hud-stat strong {
+  color: #193e47;
+  font-size: clamp(19px, 2.4vw, 26px);
+  font-weight: 500;
+  line-height: 1;
+}
+
+.hud-stat small {
+  margin-left: 4px;
+  color: rgba(25, 62, 70, 0.68);
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+}
+
+.hud-distance,
+.hud-speed {
+  padding-left: 18px;
+  border-left: 1px solid rgba(25, 62, 70, 0.18);
+}
+
+.flight-status {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 2px 0 0 auto;
+  color: #315a5d;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #92ae9c;
+  box-shadow: 0 0 0 3px rgba(146, 174, 156, 0.2);
+}
+
+.flight-status.is-flying .status-dot {
+  background: #4a9d76;
+  box-shadow: 0 0 0 3px rgba(74, 157, 118, 0.18);
+}
+
+.flight-status.is-warning .status-dot {
+  background: #df8d59;
+  box-shadow: 0 0 0 3px rgba(223, 141, 89, 0.18);
+}
+
+.overlay {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: linear-gradient(90deg, rgba(220, 240, 238, 0.36), rgba(220, 240, 238, 0.05));
+  transition: opacity 240ms ease, visibility 240ms ease;
+}
+
+.overlay.is-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.overlay-card {
+  width: min(410px, 100%);
+  margin-top: 40px;
+  padding: 27px 30px 22px;
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  border-radius: 7px;
+  background: rgba(249, 251, 246, 0.83);
+  box-shadow: 0 16px 40px rgba(40, 78, 78, 0.1);
+  text-align: center;
+  backdrop-filter: blur(12px);
+}
+
+.eyebrow {
+  color: #7d9690;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+}
+
+.overlay h1 {
+  margin: 12px 0 7px;
+  color: #1b424c;
+  font-size: clamp(28px, 4vw, 38px);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.overlay p {
+  margin: 0 auto 19px;
+  color: #617c7d;
+  font-size: 12px;
+  line-height: 1.8;
+}
+
+.primary-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  min-width: 190px;
+  padding: 12px 18px;
+  border: 0;
+  border-radius: 4px;
+  background: #244e55;
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  transition: background 160ms ease, transform 160ms ease;
+}
+
+.primary-button:hover {
+  transform: translateY(-1px);
+  background: #31656a;
+}
+
+.primary-button:focus-visible,
+.control-button:focus-visible {
+  outline: 3px solid #e29b67;
+  outline-offset: 3px;
+}
+
+.key-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 17px;
+  color: #829694;
+  font-size: 9px;
+}
+
+kbd {
+  display: inline-grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  border: 1px solid #d6e0d9;
+  border-radius: 3px;
+  background: #f6f8f3;
+  color: #42636a;
+  font: 10px var(--mono);
+}
+
+.touch-controls {
+  position: absolute;
+  z-index: 1;
+  right: 20px;
+  bottom: 47px;
+  display: flex;
+  gap: 8px;
+}
+
+.control-button {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 50%;
+  background: rgba(246, 250, 244, 0.56);
+  color: #27515a;
+  cursor: pointer;
+  font-size: 18px;
+  backdrop-filter: blur(8px);
+  touch-action: none;
+  user-select: none;
+}
+
+.control-button:active {
+  background: rgba(246, 250, 244, 0.9);
+  transform: scale(0.96);
+}
+
+.scene-caption {
+  position: absolute;
+  right: 24px;
+  bottom: 20px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: rgba(37, 76, 80, 0.75);
+  font-size: 8px;
+  letter-spacing: 0.12em;
+  pointer-events: none;
+}
+
+.caption-line {
+  width: 34px;
+  height: 1px;
+  background: rgba(37, 76, 80, 0.3);
+}
+
+.footer {
+  min-height: 49px;
+  color: #82938f;
+  font-size: 9px;
+  letter-spacing: 0.06em;
+}
+
+.thermal-key {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: #e19a68;
+  vertical-align: 1px;
+}
+
+@media (max-width: 640px) {
+  body {
+    padding: 12px;
+  }
+
+  .topbar {
+    height: 43px;
+  }
+
+  .topbar-note {
+    font-size: 8px;
+  }
+
+  .game-frame {
+    min-height: 470px;
+    aspect-ratio: 4 / 5;
+  }
+
+  .hud {
+    top: 18px;
+    left: 15px;
+    flex-wrap: wrap;
+    gap: 15px 20px;
+    max-width: calc(100% - 30px);
+  }
+
+  .hud-distance,
+  .hud-speed {
+    padding-left: 12px;
+  }
+
+  .hud-stat {
+    min-width: auto;
+  }
+
+  .flight-status {
+    flex-basis: 100%;
+    margin: -4px 0 0;
+  }
+
+  .overlay-card {
+    margin-top: 50px;
+    padding: 22px 18px 19px;
+  }
+
+  .touch-controls {
+    right: 14px;
+    bottom: 46px;
+  }
+
+  .scene-caption {
+    right: 14px;
+    bottom: 17px;
+    left: 14px;
+    font-size: 7px;
+  }
+
+  .footer {
+    font-size: 8px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}
