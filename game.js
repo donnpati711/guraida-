@@ -5,12 +5,23 @@ const startButton = document.querySelector("#start-button");
 const altitudeDisplay = document.querySelector("#altitude");
 const distanceDisplay = document.querySelector("#distance");
 const speedDisplay = document.querySelector("#speed");
+const coinCount = document.querySelector("#coin-count");
+const shopCoins = document.querySelector("#shop-coins");
 const flightStatus = document.querySelector("#flight-status");
 const statusText = document.querySelector("#status-text");
-
-const keys = { up: false, down: false };
+const overlayEyebrow = document.querySelector("#overlay-eyebrow");
+const overlayTitle = document.querySelector("#overlay-title");
+const overlayCopy = document.querySelector("#overlay-copy");
+const buttonLabel = document.querySelector("#button-label");
+const saveKey = "skybound-progress";
+const upgrades = {
+  altitude: { button: document.querySelector("#upgrade-altitude"), label: "スタート高度", detail: "高い位置から飛び立つ", baseCost: 15 },
+  speed: { button: document.querySelector("#upgrade-speed"), label: "グライダー速度", detail: "滑空スピードがアップ", baseCost: 20 },
+  thermal: { button: document.querySelector("#upgrade-thermal"), label: "上昇気流スキル", detail: "上昇気流の効果がアップ", baseCost: 25 },
+};
 const thermals = [];
 const clouds = [];
+const progress = loadProgress();
 const state = {
   active: false,
   ended: false,
@@ -27,6 +38,57 @@ const state = {
   height: 0,
   pixelRatio: 1,
 };
+
+function loadProgress() {
+  const saved = localStorage.getItem(saveKey);
+  if (!saved) return { coins: 0, altitude: 0, speed: 0, thermal: 0 };
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      coins: Number.isFinite(parsed.coins) ? Math.max(0, Math.floor(parsed.coins)) : 0,
+      altitude: Number.isFinite(parsed.altitude) ? Math.min(5, Math.max(0, Math.floor(parsed.altitude))) : 0,
+      speed: Number.isFinite(parsed.speed) ? Math.min(5, Math.max(0, Math.floor(parsed.speed))) : 0,
+      thermal: Number.isFinite(parsed.thermal) ? Math.min(5, Math.max(0, Math.floor(parsed.thermal))) : 0,
+    };
+  } catch {
+    return { coins: 0, altitude: 0, speed: 0, thermal: 0 };
+  }
+}
+
+function saveProgress() {
+  localStorage.setItem(saveKey, JSON.stringify(progress));
+}
+
+function upgradeCost(name) {
+  const upgrade = upgrades[name];
+  return upgrade.baseCost * (progress[name] + 1);
+}
+
+function updateProgressDisplay() {
+  coinCount.textContent = String(progress.coins);
+  shopCoins.textContent = String(progress.coins);
+  for (const [name, upgrade] of Object.entries(upgrades)) {
+    const level = progress[name];
+    const button = upgrade.button;
+    if (level >= 5) {
+      button.innerHTML = `<span class="upgrade-name">${upgrade.label}<small>${upgrade.detail} · MAX</small></span><span class="upgrade-cost">MAX</span>`;
+      button.disabled = true;
+      continue;
+    }
+    const cost = upgradeCost(name);
+    button.innerHTML = `<span class="upgrade-name">${upgrade.label} Lv.${level}<small>${upgrade.detail}</small></span><span class="upgrade-cost">● ${cost}</span>`;
+    button.disabled = progress.coins < cost;
+  }
+}
+
+function buyUpgrade(name) {
+  const cost = upgradeCost(name);
+  if (progress[name] >= 5 || progress.coins < cost) return;
+  progress.coins -= cost;
+  progress[name] += 1;
+  saveProgress();
+  updateProgressDisplay();
+}
 
 function resizeCanvas() {
   const bounds = canvas.getBoundingClientRect();
@@ -75,15 +137,13 @@ function resetFlight() {
   state.ended = false;
   state.time = 0;
   state.cameraX = 0;
-  state.speed = 190;
+  state.speed = 190 + progress.speed * 14;
   state.verticalSpeed = 8;
   state.pitch = 0;
   state.distance = 0;
-  state.gliderY = state.height * 0.39;
+  state.gliderY = groundHeight(0) - state.height * 0.39 - progress.altitude * 28;
   state.altitude = groundHeight(0) - state.gliderY;
   state.lastFrame = performance.now();
-  keys.up = false;
-  keys.down = false;
   thermals.length = 0;
   addThermal(540);
   addThermal(1120);
@@ -98,13 +158,14 @@ function resetFlight() {
 function finishFlight() {
   state.active = false;
   state.ended = true;
-  keys.up = false;
-  keys.down = false;
-  document.querySelector("#overlay-eyebrow").textContent = "FLIGHT COMPLETE";
-  document.querySelector("#overlay-title").textContent = "ナイスフライト。";
-  document.querySelector("#overlay-copy").textContent =
-    `${Math.floor(state.distance)}m 滑空しました。上昇気流を見つけて、もう一度挑戦しよう。`;
-  document.querySelector("#button-label").textContent = "もう一度飛ぶ";
+  const earnedCoins = Math.floor(state.distance / 100);
+  progress.coins += earnedCoins;
+  saveProgress();
+  updateProgressDisplay();
+  overlayEyebrow.textContent = "FLIGHT COMPLETE";
+  overlayTitle.textContent = "ナイスフライト。";
+  overlayCopy.textContent = `${Math.floor(state.distance)}m 滑空して、${earnedCoins} コイン獲得！強化して、さらに遠くを目指そう。`;
+  buttonLabel.textContent = "もう一度飛ぶ";
   overlay.classList.remove("is-hidden");
   flightStatus.classList.remove("is-flying", "is-warning");
   statusText.textContent = "LANDED";
@@ -125,12 +186,12 @@ function thermalLift() {
 function update(delta) {
   const dt = Math.min(delta, 0.04);
   state.time += dt;
-  const pitchTarget = keys.up ? 0.68 : keys.down ? -0.5 : 0;
+  const pitchTarget = Math.sin(state.time * 0.35) * 0.08;
   state.pitch += (pitchTarget - state.pitch) * Math.min(1, dt * 2.8);
   const lift = thermalLift();
-  const sinkRate = 21 - state.pitch * 57 - lift;
+  const sinkRate = 21 - state.pitch * 57 - lift * (1 + progress.thermal * 0.2) - progress.thermal * 1.5;
   state.verticalSpeed += (sinkRate - state.verticalSpeed) * Math.min(1, dt * 1.5);
-  const targetSpeed = 190 - state.pitch * 38 + (keys.down ? 16 : 0);
+  const targetSpeed = 190 + progress.speed * 14 - state.pitch * 38;
   state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 0.6);
   state.cameraX += state.speed * dt;
   state.distance = state.cameraX;
@@ -139,6 +200,7 @@ function update(delta) {
 
   if (state.altitude <= 18) {
     finishFlight();
+    return;
   }
 
   const nextThermalX = thermals.length
@@ -311,42 +373,11 @@ function frame(timestamp) {
   if (state.active) requestAnimationFrame(frame);
 }
 
-function setControl(control, pressed) {
-  keys[control] = pressed;
-}
-
 startButton.addEventListener("click", resetFlight);
-
-window.addEventListener("keydown", (event) => {
-  if (["ArrowUp", "ArrowDown", "w", "W", "s", "S", " "].includes(event.key)) {
-    event.preventDefault();
-  }
-  if (event.key === "ArrowUp" || event.key.toLowerCase() === "w") setControl("up", true);
-  if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") setControl("down", true);
-  if (event.key === " " && !state.active) resetFlight();
-});
-
-window.addEventListener("keyup", (event) => {
-  if (event.key === "ArrowUp" || event.key.toLowerCase() === "w") setControl("up", false);
-  if (event.key === "ArrowDown" || event.key.toLowerCase() === "s") setControl("down", false);
-});
-
-window.addEventListener("blur", () => {
-  keys.up = false;
-  keys.down = false;
-});
-
-for (const [id, control] of [["pitch-up", "up"], ["pitch-down", "down"]]) {
-  const button = document.querySelector(`#${id}`);
-  button.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
-    button.setPointerCapture(event.pointerId);
-    setControl(control, true);
-  });
-  button.addEventListener("pointerup", () => setControl(control, false));
-  button.addEventListener("pointercancel", () => setControl(control, false));
-  button.addEventListener("lostpointercapture", () => setControl(control, false));
+for (const name of Object.keys(upgrades)) {
+  upgrades[name].button.addEventListener("click", () => buyUpgrade(name));
 }
 
 window.addEventListener("resize", resizeCanvas);
+updateProgressDisplay();
 resizeCanvas();

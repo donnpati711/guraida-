@@ -33,6 +33,7 @@
             <span class="hud-label">速度</span>
             <strong><span id="speed">0</span><small>km/h</small></strong>
           </div>
+          <div class="hud-coins"><span aria-hidden="true">●</span> <span id="coin-count">0</span></div>
           <div class="flight-status" id="flight-status">
             <span class="status-dot"></span>
             <span id="status-text">READY TO FLY</span>
@@ -44,31 +45,35 @@
             <span class="eyebrow" id="overlay-eyebrow">YOUR SKY IS WAITING</span>
             <h1 id="overlay-title">風に乗ろう。</h1>
             <p id="overlay-copy">
-              上昇気流をつかまえて、できるだけ遠くまで滑空しよう。
+              グライダーは自動で滑空します。飛行距離に応じてコインを獲得しよう。
             </p>
+            <div class="upgrade-shop" aria-label="フライト強化">
+              <div class="shop-heading">
+                <span>FLIGHT UPGRADES</span>
+                <strong><span aria-hidden="true">●</span> <span id="shop-coins">0</span></strong>
+              </div>
+              <div class="upgrade-list">
+                <button class="upgrade-button" id="upgrade-altitude" type="button"></button>
+                <button class="upgrade-button" id="upgrade-speed" type="button"></button>
+                <button class="upgrade-button" id="upgrade-thermal" type="button"></button>
+              </div>
+            </div>
             <button class="primary-button" id="start-button" type="button">
               <span id="button-label">フライト開始</span>
               <span aria-hidden="true">↗</span>
             </button>
-            <div class="key-hint">
-              <kbd>↑</kbd><kbd>↓</kbd><span>または</span><kbd>W</kbd><kbd>S</kbd>
-              <span>で機首を操作</span>
-            </div>
+            <div class="key-hint">100m 滑空するごとに 1 コイン</div>
           </div>
         </div>
 
-        <div class="touch-controls" aria-label="飛行操作">
-          <button class="control-button" id="pitch-up" type="button" aria-label="機首を上げる">↑</button>
-          <button class="control-button" id="pitch-down" type="button" aria-label="機首を下げる">↓</button>
-        </div>
         <div class="scene-caption" aria-hidden="true">
           <span>ALPINE VALLEY</span><span class="caption-line"></span><span>晴れ・北西の風</span>
         </div>
       </section>
 
       <footer class="footer">
-        <span>グライダーは風を味方にする。</span>
-        <span>上昇気流 <i class="thermal-key" aria-hidden="true"></i></span>
+        <span>準備を整えて、あとは風まかせ。</span>
+        <span>上昇気流 <i class="thermal-key" aria-hidden="true"></i> ・ 自動滑空</span>
       </footer>
     </main>
     <script src="game.js"></script>
