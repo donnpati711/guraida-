@@ -56,8 +56,12 @@
                 <button class="upgrade-button" id="upgrade-altitude" type="button"></button>
                 <button class="upgrade-button" id="upgrade-speed" type="button"></button>
                 <button class="upgrade-button" id="upgrade-thermal" type="button"></button>
+                <button class="upgrade-button" id="upgrade-glide" type="button"></button>
+                <button class="upgrade-button" id="upgrade-reward" type="button"></button>
+                <button class="upgrade-button" id="upgrade-event" type="button"></button>
               </div>
             </div>
+            <button class="shop-link" id="open-costume-shop" type="button">コスチュームショップを見る</button>
             <button class="primary-button" id="start-button" type="button">
               <span id="button-label">フライト開始</span>
               <span aria-hidden="true">↗</span>
@@ -66,6 +70,32 @@
           </div>
         </div>
 
+        <div class="costume-overlay is-hidden" id="costume-overlay" aria-hidden="true">
+          <section class="costume-panel" role="dialog" aria-modal="true" aria-labelledby="costume-title">
+            <header class="costume-header">
+              <div>
+                <span class="eyebrow">CUSTOMIZE YOUR FLIGHT</span>
+                <h2 id="costume-title">コスチュームショップ</h2>
+              </div>
+              <button class="shop-close" id="close-costume-shop" type="button" aria-label="ショップを閉じる">×</button>
+            </header>
+            <p class="costume-help">「試着」で飛行画面に反映。気に入ったらコインで購入できます。</p>
+            <div class="shop-heading costume-balance">
+              <span>所持コイン</span>
+              <strong><span aria-hidden="true">●</span> <span id="costume-coins">0</span></strong>
+            </div>
+            <h3 class="costume-category">パイロットの服</h3>
+            <div class="costume-grid" id="pilot-costumes"></div>
+            <h3 class="costume-category">グライダーのカラー</h3>
+            <div class="costume-grid" id="glider-costumes"></div>
+            <div class="costume-actions">
+              <button class="shop-link" id="reset-costume-preview" type="button">試着をリセット</button>
+              <button class="primary-button" id="done-costume-shop" type="button">装備して飛ぶ</button>
+            </div>
+          </section>
+        </div>
+
+        <div class="event-banner" id="event-banner" aria-live="polite"></div>
         <div class="scene-caption" aria-hidden="true">
           <span>ALPINE VALLEY</span><span class="caption-line"></span><span>晴れ・北西の風</span>
         </div>
