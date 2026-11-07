@@ -552,7 +552,7 @@ function draw() {
   drawTerrain();
   drawGlider();
 }
-あ
+
 function frame(timestamp) {
   if (!state.active) return;
   const delta = (timestamp - state.lastFrame) / 1000;
