@@ -42,7 +42,6 @@ const gliderCostumes = [
 const thermals = [];
 const clouds = [];
 const progress = loadProgress();
-const costumePreview = { pilot: null, glider: null };
 const state = {
   active: false,
   ended: false,
@@ -154,15 +153,6 @@ function renderCostumeCategory(selector, costumes, type, owned) {
     swatch.style.background = costume.color;
     const title = document.createElement("strong");
     title.textContent = costume.name;
-    const previewButton = document.createElement("button");
-    previewButton.className = "costume-action";
-    previewButton.type = "button";
-    previewButton.textContent = costumePreview[type] === costume.id ? "試着中" : "試着";
-    previewButton.addEventListener("click", () => {
-      costumePreview[type] = costume.id;
-      updateCostumeShop();
-      draw();
-    });
     const actionButton = document.createElement("button");
     actionButton.className = "costume-action";
     actionButton.type = "button";
@@ -171,7 +161,6 @@ function renderCostumeCategory(selector, costumes, type, owned) {
       actionButton.disabled = progress[type] === costume.id;
       actionButton.addEventListener("click", () => {
         progress[type] = costume.id;
-        costumePreview[type] = costume.id;
         saveProgress();
         updateCostumeShop();
         draw();
@@ -184,19 +173,16 @@ function renderCostumeCategory(selector, costumes, type, owned) {
         progress.coins -= costume.cost;
         owned.push(costume.id);
         progress[type] = costume.id;
-        costumePreview[type] = costume.id;
         saveProgress();
         updateProgressDisplay();
       });
     }
-    card.append(swatch, title, previewButton, actionButton);
+    card.append(swatch, title, actionButton);
     container.append(card);
   }
 }
 
 function openCostumeShop() {
-  costumePreview.pilot = progress.pilot;
-  costumePreview.glider = progress.glider;
   overlay.classList.add("is-hidden");
   updateCostumeShop();
   costumeOverlay.classList.remove("is-hidden");
@@ -204,14 +190,7 @@ function openCostumeShop() {
   draw();
 }
 
-function closeCostumeShop(keepPreview) {
-  if (keepPreview) {
-    if (progress.ownedPilot.includes(costumePreview.pilot)) progress.pilot = costumePreview.pilot;
-    if (progress.ownedGlider.includes(costumePreview.glider)) progress.glider = costumePreview.glider;
-    saveProgress();
-  }
-  costumePreview.pilot = null;
-  costumePreview.glider = null;
+function closeCostumeShop() {
   costumeOverlay.classList.add("is-hidden");
   costumeOverlay.setAttribute("aria-hidden", "true");
   overlay.classList.remove("is-hidden");
@@ -280,8 +259,8 @@ function resetFlight() {
   state.eventBonus = 0;
   state.eventType = null;
   state.eventRemaining = 0;
-  state.nextEventIn = 4 + Math.random() * 7 - progress.event * 0.6;
-  state.gliderY = groundHeight(0) - state.height * 0.39 - progress.altitude * 28;
+  state.nextEventIn = 5 + Math.random() * 7 - progress.event * 0.4;
+  state.gliderY = Math.max(48, groundHeight(0) - state.height * 0.39 - progress.altitude * 28);
   state.altitude = groundHeight(0) - state.gliderY;
   state.lastFrame = performance.now();
   thermals.length = 0;
@@ -343,29 +322,29 @@ function update(delta) {
     state.nextEventIn -= dt;
     if (state.nextEventIn <= 0) {
       const event = Math.floor(Math.random() * 3);
-      state.eventRemaining = 6 + Math.random() * 3;
+      state.eventRemaining = 4 + Math.random() * 2;
       if (event === 0) {
         state.eventType = "tailwind";
         showEvent("追い風！しばらくスピードアップ");
       } else if (event === 1) {
         state.eventType = "thermal";
-        showEvent("大きな上昇気流！高度をキープ");
+        showEvent("上昇気流！高度を保ちやすい");
       } else {
         state.eventType = "coins";
-        state.eventBonus += 8 + Math.floor(Math.random() * 8);
+        state.eventBonus += 2 + Math.floor(Math.random() * 3);
         showEvent("コインの風！着地時にボーナス");
       }
-      state.nextEventIn = 11 + Math.random() * 13 - progress.event * 1.2;
+      state.nextEventIn = 16 + Math.random() * 14 - progress.event * 0.8;
     }
   }
-  const lift = thermalLift() + (state.eventType === "thermal" ? 22 : 0);
+  const lift = thermalLift() + (state.eventType === "thermal" ? 8 : 0);
   const sinkRate = 21 - state.pitch * 57 - lift * (1 + progress.thermal * 0.2) - progress.thermal * 1.5 - progress.glide * 2.2;
   state.verticalSpeed += (sinkRate - state.verticalSpeed) * Math.min(1, dt * 1.5);
-  const targetSpeed = 190 + progress.speed * 14 + (state.eventType === "tailwind" ? 65 : 0) - state.pitch * 38;
+  const targetSpeed = 190 + progress.speed * 14 + (state.eventType === "tailwind" ? 25 : 0) - state.pitch * 38;
   state.speed += (targetSpeed - state.speed) * Math.min(1, dt * 0.6);
   state.cameraX += state.speed * dt;
   state.distance = state.cameraX;
-  state.gliderY += state.verticalSpeed * dt;
+  state.gliderY = Math.max(48, state.gliderY + state.verticalSpeed * dt);
   state.altitude = groundHeight(state.cameraX) - state.gliderY;
 
   if (state.altitude <= 18) {
@@ -478,8 +457,8 @@ function drawGlider() {
   const x = state.width * 0.28;
   const y = state.gliderY;
   const angle = -state.pitch * 0.27;
-  const pilot = pilotCostumes.find(({ id }) => id === (costumePreview.pilot || progress.pilot));
-  const glider = gliderCostumes.find(({ id }) => id === (costumePreview.glider || progress.glider));
+  const pilot = pilotCostumes.find(({ id }) => id === progress.pilot);
+  const glider = gliderCostumes.find(({ id }) => id === progress.glider);
   context.save();
   context.translate(x, y);
   context.rotate(angle);
@@ -573,7 +552,7 @@ function draw() {
   drawTerrain();
   drawGlider();
 }
-
+あ
 function frame(timestamp) {
   if (!state.active) return;
   const delta = (timestamp - state.lastFrame) / 1000;
@@ -588,23 +567,17 @@ for (const name of Object.keys(upgrades)) {
   upgrades[name].button.addEventListener("click", () => buyUpgrade(name));
 }
 document.querySelector("#open-costume-shop").addEventListener("click", openCostumeShop);
-document.querySelector("#close-costume-shop").addEventListener("click", () => closeCostumeShop(false));
+document.querySelector("#close-costume-shop").addEventListener("click", closeCostumeShop);
 document.querySelector("#done-costume-shop").addEventListener("click", () => {
-  closeCostumeShop(true);
+  closeCostumeShop();
   resetFlight();
 });
-document.querySelector("#reset-costume-preview").addEventListener("click", () => {
-  costumePreview.pilot = progress.pilot;
-  costumePreview.glider = progress.glider;
-  updateCostumeShop();
-  draw();
-});
 costumeOverlay.addEventListener("click", (event) => {
-  if (event.target === costumeOverlay) closeCostumeShop(false);
+  if (event.target === costumeOverlay) closeCostumeShop();
 });
 window.addEventListener("keydown", (event) => {
   if (event.key === "Escape" && !costumeOverlay.classList.contains("is-hidden")) {
-    closeCostumeShop(false);
+    closeCostumeShop();
   }
 });
 
